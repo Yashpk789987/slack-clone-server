@@ -7,6 +7,11 @@ import { makeExecutableSchema } from 'graphql-tools';
 import models from './models';
 import path from 'path';
 import { fileLoader, mergeTypes, mergeResolvers } from 'merge-graphql-schemas';
+import { refreshTokens } from './auth';
+import jwt from 'jsonwebtoken';
+
+const SECRET = 'secret';
+const SECRET2 = 'secret2';
 
 const types = fileLoader(path.join(__dirname, './schema'));
 const typeDefs = mergeTypes(types);
@@ -15,19 +20,49 @@ const resolvers = mergeResolvers(
   fileLoader(path.join(__dirname, './resolvers'))
 );
 
-console.log(resolvers);
-
 const schema = makeExecutableSchema({
   typeDefs,
   resolvers
 });
 
 var app = express();
+const addUser = async (req, res, next) => {
+  const token = req.headers['x-token'];
+  if (token) {
+    try {
+      const { user } = jwt.verify(token, SECRET);
+      console.log('I am Here ...', user);
+      req.user = user;
+    } catch (err) {
+      console.log('I am Here ...', err);
+      const refreshToken = req.headers['x-refresh-token'];
+      const newTokens = await refreshTokens(
+        token,
+        refreshToken,
+        models,
+        SECRET,
+        SECRET2
+      );
+      if (newTokens.token && newTokens.refreshToken) {
+        res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
+        res.set('x-token', newTokens.token);
+        res.set('x-refresh-token', newTokens.refreshToken);
+      }
+      req.user = newTokens.user;
+    }
+  }
+
+  next();
+};
+
+app.use(addUser);
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: { models, user: { id: 4 } }
+  context: ({ req }) => ({ models, user: req.user, SECRET, SECRET2 })
 });
+
 server.applyMiddleware({ app });
 
 app.use(express.json());
@@ -42,3 +77,86 @@ models.sequelize.sync().then(() => {
 app.listen(process.env.PORT || 3000, () =>
   console.log(`🚀 Server ready at http://localhost:3000${server.graphqlPath}`)
 );
+
+//////////////////////// OLD VERSION /////////////////////////
+// import express from 'express';
+// import bodyParser from 'body-parser';
+// import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
+// import { makeExecutableSchema } from 'graphql-tools';
+// import path from 'path';
+// import { fileLoader, mergeTypes, mergeResolvers } from 'merge-graphql-schemas';
+// import cors from 'cors';
+// import jwt from 'jsonwebtoken';
+
+// import models from './models';
+// import { refreshTokens } from './auth';
+
+// const SECRET = 'asiodfhoi1hoi23jnl1kejd';
+// const SECRET2 = 'asiodfhoi1hoi23jnl1kejasdjlkfasdd';
+
+// const typeDefs = mergeTypes(fileLoader(path.join(__dirname, './schema')));
+
+// const resolvers = mergeResolvers(
+//   fileLoader(path.join(__dirname, './resolvers'))
+// );
+
+// const schema = makeExecutableSchema({
+//   typeDefs,
+//   resolvers
+// });
+
+// const app = express();
+
+// app.use(cors('*'));
+
+// const addUser = async (req, res, next) => {
+//   const token = req.headers['x-token'];
+//   if (token) {
+//     try {
+//       const { user } = jwt.verify(token, SECRET);
+//       req.user = user;
+//     } catch (err) {
+//       const refreshToken = req.headers['x-refresh-token'];
+//       const newTokens = await refreshTokens(
+//         token,
+//         refreshToken,
+//         models,
+//         SECRET,
+//         SECRET2
+//       );
+//       if (newTokens.token && newTokens.refreshToken) {
+//         res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
+//         res.set('x-token', newTokens.token);
+//         res.set('x-refresh-token', newTokens.refreshToken);
+//       }
+//       req.user = newTokens.user;
+//     }
+//   }
+//   next();
+// };
+
+// app.use(addUser);
+
+// const graphqlEndpoint = '/graphql';
+
+// app.use(
+//   graphqlEndpoint,
+//   bodyParser.json(),
+//   graphqlExpress(req => ({
+//     schema,
+//     context: {
+//       models,
+//       user: req.user,
+//       SECRET,
+//       SECRET2
+//     }
+//   }))
+// );
+
+// app.use('/graphiql', graphiqlExpress({ endpointURL: graphqlEndpoint }));
+
+// models.sequelize.sync({}).then(() => {
+//   app.listen(8081);
+// });
+
+//////////////////////// OLD VERSION /////////////////////////

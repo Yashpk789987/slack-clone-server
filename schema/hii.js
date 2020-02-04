@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-express';
-export default gql`
+export default `
   type Query {
     hi: String
   }

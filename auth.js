@@ -7,7 +7,7 @@ var salt = bcrypt.genSaltSync(10);
 export const createTokens = async (user, secret, secret2) => {
   const createToken = jwt.sign(
     {
-      user: _.pick(user, ['id'])
+      user: _.pick(user, ['id', 'username'])
     },
     secret,
     {
@@ -17,7 +17,7 @@ export const createTokens = async (user, secret, secret2) => {
 
   const createRefreshToken = jwt.sign(
     {
-      user: _.pick(user, 'id')
+      user: _.pick(user, 'id', 'username')
     },
     secret2,
     {

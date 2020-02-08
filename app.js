@@ -1,6 +1,6 @@
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-require('dotenv').config();
+
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
@@ -31,10 +31,8 @@ const addUser = async (req, res, next) => {
   if (token) {
     try {
       const { user } = jwt.verify(token, SECRET);
-      console.log('I am Here ...', user);
       req.user = user;
     } catch (err) {
-      console.log('I am Here ...', err);
       const refreshToken = req.headers['x-refresh-token'];
       const newTokens = await refreshTokens(
         token,
@@ -51,7 +49,6 @@ const addUser = async (req, res, next) => {
       req.user = newTokens.user;
     }
   }
-
   next();
 };
 

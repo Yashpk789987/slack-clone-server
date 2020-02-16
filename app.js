@@ -9,10 +9,8 @@ import path from 'path';
 import { fileLoader, mergeTypes, mergeResolvers } from 'merge-graphql-schemas';
 import { refreshTokens } from './auth';
 import jwt from 'jsonwebtoken';
-
 const SECRET = 'secret';
 const SECRET2 = 'secret2';
-
 const types = fileLoader(path.join(__dirname, './schema'));
 const typeDefs = mergeTypes(types);
 
@@ -26,6 +24,7 @@ const schema = makeExecutableSchema({
 });
 
 var app = express();
+
 const addUser = async (req, res, next) => {
   const token = req.headers['x-token'];
   if (token) {

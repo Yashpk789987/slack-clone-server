@@ -7,7 +7,10 @@ export default {
   Query: {
     allTeams: requiresAuth.createResolver(
       async (parent, args, { models, user }) => {
-        return models.Team.findAll({ owner: user.id }, { raw: true });
+        return models.Team.findAll(
+          { where: { owner: user.id } },
+          { raw: true }
+        );
       }
     )
   },
@@ -15,9 +18,15 @@ export default {
     createTeam: requiresAuth.createResolver(
       async (parent, args, { models, user }) => {
         try {
-          await models.Team.create({ ...args, owner: user.id });
+          const team = await models.Team.create({ ...args, owner: user.id });
+          await models.Channel.create({
+            name: 'general',
+            public: true,
+            teamId: team.id
+          });
           return {
-            ok: true
+            ok: true,
+            team
           };
         } catch (err) {
           console.log(err);
@@ -30,7 +39,7 @@ export default {
     )
   },
   Team: {
-    channels: ({ id }, args, { models, user }) =>
-      models.Channel.findAll({ teamId: id })
+    channels: ({ id }, args, { models }) =>
+      models.Channel.findAll({ where: { teamId: id } })
   }
 };

@@ -1,8 +1,6 @@
 import formatErrors from '../formatErrors';
 import requiresAuth from '../permissions';
 
-//{ where: { owner: user.id } },
-
 export default {
   Query: {
     allTeams: requiresAuth.createResolver(

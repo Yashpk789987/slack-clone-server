@@ -10,7 +10,7 @@ export default `
   type CreateTeamResponse {
     ok: Boolean!
     errors: [Error!]
-    team : Team!
+    team : Team
   }
 
   type Query {

@@ -7,7 +7,7 @@ export default {
         return { ok: true, channel };
       } catch (error) {
         console.log(error);
-        return { ok: false, errors: formatErrors(error) };
+        return { ok: false, errors: formatErrors(error, models) };
       }
     }
   }

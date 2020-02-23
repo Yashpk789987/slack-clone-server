@@ -1,18 +1,23 @@
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
 import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
+import bodyParser from 'body-parser';
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
-import models from './models';
 import path from 'path';
 import { fileLoader, mergeTypes, mergeResolvers } from 'merge-graphql-schemas';
-import { refreshTokens } from './auth';
+import cors from 'cors';
 import jwt from 'jsonwebtoken';
-const SECRET = 'secret';
+import { createServer } from 'http';
+import { execute, subscribe } from 'graphql';
+import { PubSub } from 'graphql-subscriptions';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+
+import models from './models';
+import { refreshTokens } from './auth';
+
+const SECRET = 'secret1';
 const SECRET2 = 'secret2';
-const types = fileLoader(path.join(__dirname, './schema'));
-const typeDefs = mergeTypes(types);
+
+const typeDefs = mergeTypes(fileLoader(path.join(__dirname, './schema')));
 
 const resolvers = mergeResolvers(
   fileLoader(path.join(__dirname, './resolvers'))
@@ -23,7 +28,9 @@ const schema = makeExecutableSchema({
   resolvers
 });
 
-var app = express();
+const app = express();
+
+app.use(cors('*'));
 
 const addUser = async (req, res, next) => {
   const token = req.headers['x-token'];
@@ -53,106 +60,38 @@ const addUser = async (req, res, next) => {
 
 app.use(addUser);
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: ({ req }) => ({ models, user: req.user, SECRET, SECRET2 })
-});
+const graphqlEndpoint = '/graphql';
 
-server.applyMiddleware({ app });
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-models.sequelize.sync().then(() => {
-  console.log('Database Synced');
-});
-
-app.listen(process.env.PORT || 3000, () =>
-  console.log(`🚀 Server ready at http://localhost:3000${server.graphqlPath}`)
+app.use(
+  graphqlEndpoint,
+  bodyParser.json(),
+  graphqlExpress(req => ({
+    schema,
+    context: {
+      models,
+      user: req.user,
+      SECRET,
+      SECRET2
+    }
+  }))
 );
 
-//////////////////////// OLD VERSION /////////////////////////
-// import express from 'express';
-// import bodyParser from 'body-parser';
-// import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-// import { makeExecutableSchema } from 'graphql-tools';
-// import path from 'path';
-// import { fileLoader, mergeTypes, mergeResolvers } from 'merge-graphql-schemas';
-// import cors from 'cors';
-// import jwt from 'jsonwebtoken';
+app.use('/graphiql', graphiqlExpress({ endpointURL: graphqlEndpoint }));
 
-// import models from './models';
-// import { refreshTokens } from './auth';
+const server = createServer(app);
 
-// const SECRET = 'asiodfhoi1hoi23jnl1kejd';
-// const SECRET2 = 'asiodfhoi1hoi23jnl1kejasdjlkfasdd';
-
-// const typeDefs = mergeTypes(fileLoader(path.join(__dirname, './schema')));
-
-// const resolvers = mergeResolvers(
-//   fileLoader(path.join(__dirname, './resolvers'))
-// );
-
-// const schema = makeExecutableSchema({
-//   typeDefs,
-//   resolvers
-// });
-
-// const app = express();
-
-// app.use(cors('*'));
-
-// const addUser = async (req, res, next) => {
-//   const token = req.headers['x-token'];
-//   if (token) {
-//     try {
-//       const { user } = jwt.verify(token, SECRET);
-//       req.user = user;
-//     } catch (err) {
-//       const refreshToken = req.headers['x-refresh-token'];
-//       const newTokens = await refreshTokens(
-//         token,
-//         refreshToken,
-//         models,
-//         SECRET,
-//         SECRET2
-//       );
-//       if (newTokens.token && newTokens.refreshToken) {
-//         res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
-//         res.set('x-token', newTokens.token);
-//         res.set('x-refresh-token', newTokens.refreshToken);
-//       }
-//       req.user = newTokens.user;
-//     }
-//   }
-//   next();
-// };
-
-// app.use(addUser);
-
-// const graphqlEndpoint = '/graphql';
-
-// app.use(
-//   graphqlEndpoint,
-//   bodyParser.json(),
-//   graphqlExpress(req => ({
-//     schema,
-//     context: {
-//       models,
-//       user: req.user,
-//       SECRET,
-//       SECRET2
-//     }
-//   }))
-// );
-
-// app.use('/graphiql', graphiqlExpress({ endpointURL: graphqlEndpoint }));
-
-// models.sequelize.sync({}).then(() => {
-//   app.listen(8081);
-// });
-
-//////////////////////// OLD VERSION /////////////////////////
+models.sequelize.sync({}).then(() => {
+  server.listen(process.env.PORT || 3000, () => {
+    new SubscriptionServer(
+      {
+        execute,
+        subscribe,
+        schema
+      },
+      {
+        server,
+        path: '/subscriptions'
+      }
+    );
+  });
+});

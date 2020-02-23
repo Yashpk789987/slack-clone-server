@@ -76,7 +76,13 @@ app.use(
   }))
 );
 
-app.use('/graphiql', graphiqlExpress({ endpointURL: graphqlEndpoint }));
+app.use(
+  '/graphiql',
+  graphiqlExpress({
+    endpointURL: graphqlEndpoint,
+    subscriptionsEndpoint: 'ws://localhost:3000/subscriptions'
+  })
+);
 
 const server = createServer(app);
 
@@ -86,7 +92,31 @@ models.sequelize.sync({}).then(() => {
       {
         execute,
         subscribe,
-        schema
+        schema,
+        onConnect: async ({ token, refreshToken }, webSocket) => {
+          if (token && refreshToken) {
+            let user = null;
+            try {
+              const payload = jwt.verify(token, SECRET);
+              user = payload.user;
+            } catch (err) {
+              const refreshToken = req.headers['x-refresh-token'];
+              const newTokens = await refreshTokens(
+                token,
+                refreshToken,
+                models,
+                SECRET,
+                SECRET2
+              );
+              user = newTokens.user;
+            }
+            if (!user) {
+              throw new Error('Invalid Auth Tokens');
+            }
+            return true;
+          }
+          throw new Error('Missing Auth tokens');
+        }
       },
       {
         server,

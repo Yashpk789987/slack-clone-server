@@ -7,7 +7,7 @@ export default `
     teams: [Team!]!
   }
   type Query {
-    getUser(id: Int!): User!
+    me: User!
     allUsers: [User!]!
   }
 

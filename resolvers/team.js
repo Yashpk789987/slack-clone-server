@@ -2,35 +2,13 @@ import formatErrors from '../formatErrors';
 import requiresAuth from '../permissions';
 
 export default {
-  Query: {
-    allTeams: requiresAuth.createResolver(
-      async (parent, args, { models, user }) => {
-        return models.Team.findAll(
-          { where: { owner: user.id } },
-          { raw: true }
-        );
-      }
-    ),
-    inviteTeams: requiresAuth.createResolver(
-      async (parent, args, { models, user }) => {
-        return models.sequelize.query(
-          'select * from teams join members on id = team_id where user_id = ?',
-          {
-            replacements: [user.id],
-            model: models.Team
-          }
-        );
-      }
-    )
-    
-  },
   Mutation: {
     addTeamMember: requiresAuth.createResolver(
       async (parent, { email, teamId }, { models, user }) => {
         try {
-          const teamPromise = models.Team.findOne(
+          const memberPromise = models.Member.findOne(
             {
-              where: { id: teamId }
+              where: { teamId, userId: user.id }
             },
             { raw: true }
           );
@@ -40,12 +18,12 @@ export default {
             { raw: true }
           );
 
-          const [team, usertoAdd] = await Promise.all([
-            teamPromise,
+          const [member, usertoAdd] = await Promise.all([
+            memberPromise,
             usertoAddPromise
           ]);
 
-          if (team.owner !== user.id) {
+          if (!member.admin) {
             return {
               ok: false,
               errors: [
@@ -84,10 +62,15 @@ export default {
       async (parent, args, { models, user }) => {
         try {
           const response = await models.sequelize.transaction(async () => {
-            const team = await models.Team.create({ ...args, owner: user.id });
+            const team = await models.Team.create({ ...args });
             await models.Channel.create({
               name: 'general',
               public: true,
+              teamId: team.id
+            });
+            await models.Member.create({
+              userId: user.id,
+              admin: true,
               teamId: team.id
             });
             return team;

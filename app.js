@@ -97,8 +97,8 @@ models.sequelize.sync({}).then(() => {
           if (token && refreshToken) {
             let user = null;
             try {
-              const payload = jwt.verify(token, SECRET);
-              user = payload.user;
+              const { user } = jwt.verify(token, SECRET);
+              return { models, user };
             } catch (err) {
               const refreshToken = req.headers['x-refresh-token'];
               const newTokens = await refreshTokens(
@@ -108,14 +108,10 @@ models.sequelize.sync({}).then(() => {
                 SECRET,
                 SECRET2
               );
-              user = newTokens.user;
+              return { models, user: newTokens.user };
             }
-            if (!user) {
-              throw new Error('Invalid Auth Tokens');
-            }
-            return true;
           }
-          throw new Error('Missing Auth tokens');
+          return { models };
         }
       },
       {

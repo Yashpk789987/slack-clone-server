@@ -8,14 +8,13 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { execute, subscribe } from 'graphql';
-import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 import models from './models';
 import { refreshTokens } from './auth';
 
-const SECRET = 'secret1';
-const SECRET2 = 'secret2';
+const SECRET = 'asiodfhoi1hoi23jnl1kejd';
+const SECRET2 = 'asiodfhoi1hoi23jnl1kejasdjlkfasdd';
 
 const typeDefs = mergeTypes(fileLoader(path.join(__dirname, './schema')));
 
@@ -87,7 +86,8 @@ app.use(
 const server = createServer(app);
 
 models.sequelize.sync({}).then(() => {
-  server.listen(process.env.PORT || 3000, () => {
+  server.listen(3000, () => {
+    // eslint-disable-next-line no-new
     new SubscriptionServer(
       {
         execute,
@@ -95,12 +95,10 @@ models.sequelize.sync({}).then(() => {
         schema,
         onConnect: async ({ token, refreshToken }, webSocket) => {
           if (token && refreshToken) {
-            let user = null;
             try {
               const { user } = jwt.verify(token, SECRET);
               return { models, user };
             } catch (err) {
-              const refreshToken = req.headers['x-refresh-token'];
               const newTokens = await refreshTokens(
                 token,
                 refreshToken,
@@ -111,6 +109,7 @@ models.sequelize.sync({}).then(() => {
               return { models, user: newTokens.user };
             }
           }
+
           return { models };
         }
       },

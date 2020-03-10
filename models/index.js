@@ -1,12 +1,17 @@
 import Sequelize from 'sequelize';
 
-const sequelize = new Sequelize('slack-clone-graphql', 'root', '', {
-  dialect: 'mysql',
-  operatorsAliases: Sequelize.Op,
-  define: {
-    underscored: true
+const sequelize = new Sequelize(
+  process.env.TEST_DB || 'slack-clone-graphql',
+  'root',
+  '',
+  {
+    dialect: 'mysql',
+    operatorsAliases: Sequelize.Op,
+    define: {
+      underscored: true
+    }
   }
-});
+);
 
 const models = {
   User: sequelize.import('./user'),

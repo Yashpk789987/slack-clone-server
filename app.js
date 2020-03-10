@@ -85,7 +85,9 @@ app.use(
 
 const server = createServer(app);
 
-models.sequelize.sync({}).then(() => {
+const clear = process.env.TEST_DB ? true : false;
+
+models.sequelize.sync({ force: clear }).then(() => {
   server.listen(3000, () => {
     // eslint-disable-next-line no-new
     new SubscriptionServer(

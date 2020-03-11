@@ -80,6 +80,8 @@ const fileMiddleware = (req, res, next) => {
       const {
         file: { type, path: filePath }
       } = files;
+      console.log(type);
+      console.log(filePath);
       document.variables.file = {
         type,
         path: filePath
@@ -117,6 +119,8 @@ app.use(
     subscriptionsEndpoint: 'ws://localhost:3000/subscriptions'
   })
 );
+
+app.use('/files', express.static('files'));
 
 const server = createServer(app);
 

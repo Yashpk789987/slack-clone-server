@@ -18,6 +18,7 @@ export default `
       teamId: Int!
       name: String!
       public: Boolean = false
+      members : [Int!]
     ): ChannelResponse
   }
 `;

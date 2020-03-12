@@ -75,20 +75,31 @@ export default {
     createTeam: requiresAuth.createResolver(
       async (parent, args, { models, user }) => {
         try {
-          const response = await models.sequelize.transaction(async (transaction) => {
-            const team = await models.Team.create({ ...args } , {transaction});
-            await models.Channel.create({
-              name: 'general',
-              public: true,
-              teamId: team.id
-            } , {transaction});
-            await models.Member.create({
-              userId: user.id,
-              admin: true,
-              teamId: team.id
-            } , {transaction});
-            return team;
-          });
+          const response = await models.sequelize.transaction(
+            async transaction => {
+              const team = await models.Team.create(
+                { ...args },
+                { transaction }
+              );
+              await models.Channel.create(
+                {
+                  name: 'general',
+                  public: true,
+                  teamId: team.id
+                },
+                { transaction }
+              );
+              await models.Member.create(
+                {
+                  userId: user.id,
+                  admin: true,
+                  teamId: team.id
+                },
+                { transaction }
+              );
+              return team;
+            }
+          );
           return {
             ok: true,
             team: response
@@ -104,8 +115,18 @@ export default {
     )
   },
   Team: {
-    channels: ({ id }, args, { models }) =>
-      models.Channel.findAll({ where: { teamId: id } }),
+    channels: ({ id }, args, { models, user }) =>
+      models.sequelize.query(
+        `
+        select * 
+        from channels as c, pcmembers as pc 
+        where c.team_id = :teamId and (c.public = true or (pc.user_id = :userId and c.id = pc.channel_id)) group by c.id ;`,
+        {
+          replacements: { teamId: id, userId: user.id },
+          model: models.Channel,
+          raw: true
+        }
+      ),
     directMessageMembers: ({ id }, args, { models, user }) =>
       models.sequelize.query(
         'select distinct  u.id, u.username from users as u join direct_messages as dm on (u.id = dm.sender_id) or (u.id = dm.receiver_id) where (:currentUserId = dm.sender_id or :currentUserId = dm.receiver_id) and dm.team_id = :teamId',

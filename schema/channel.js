@@ -14,6 +14,11 @@ export default `
     errors : [Error!]
   }
 
+  type DMChannelResponse {
+    id: Int!
+    name: String!
+  }
+
   type Mutation {
     createChannel(
       teamId: Int!
@@ -21,6 +26,6 @@ export default `
       public: Boolean = false
       members : [Int!]
     ): ChannelResponse
-    getOrCreateChannel(teamId : Int! , members: [Int!]!) : Int!
+    getOrCreateChannel(teamId : Int! , members: [Int!]!) : DMChannelResponse!
   }
 `;

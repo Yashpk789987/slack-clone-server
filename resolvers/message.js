@@ -29,7 +29,7 @@ export default {
   },
   Query: {
     messages: requiresAuth.createResolver(
-      async (parent, { channelId }, { models }) => {
+      async (parent, { channelId }, { models, user }) => {
         const channel = await models.Channel.findOne({
           raw: true,
           where: { id: channelId }

@@ -1,11 +1,24 @@
 import Sequelize from 'sequelize';
 
+// const sequelize = new Sequelize(
+//   process.env.TEST_DB || 'slack-clone-graphql',
+//   'root',
+//   '',
+//   {
+//     dialect: 'mysql',
+//     operatorsAliases: Sequelize.Op,
+//     define: {
+//       underscored: true
+//     }
+//   }
+// );
+
 const sequelize = new Sequelize(
-  process.env.TEST_DB || 'slack-clone-graphql',
-  'root',
-  '',
+  process.env.TEST_DB || 'slack',
+  'postgres',
+  '123',
   {
-    dialect: 'mysql',
+    dialect: 'postgres',
     operatorsAliases: Sequelize.Op,
     define: {
       underscored: true

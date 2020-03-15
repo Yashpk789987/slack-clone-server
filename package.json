@@ -37,6 +37,7 @@
     "lodash": "^4.17.4",
     "merge-graphql-schemas": "^1.1.4",
     "mysql2": "^2.1.0",
+    "pg": "^7.18.2",
     "sequelize": "^4.13.5",
     "subscriptions-transport-ws": "^0.9.1"
   }

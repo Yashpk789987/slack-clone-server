@@ -10,9 +10,11 @@ import { createServer } from 'http';
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import formidable from 'formidable';
+import DataLoader from 'dataloader';
 
 import models from './models';
 import { refreshTokens } from './auth';
+import { channelBatcher } from './batchFunctions';
 
 const SECRET = 'asiodfhoi1hoi23jnl1kejd';
 const SECRET2 = 'asiodfhoi1hoi23jnl1kejasdjlkfasdd';
@@ -107,7 +109,10 @@ app.use(
       models,
       user: req.user,
       SECRET,
-      SECRET2
+      SECRET2,
+      channelLoader: new DataLoader(ids =>
+        channelBatcher(ids, models, req.user)
+      )
     }
   }))
 );
@@ -116,7 +121,7 @@ app.use(
   '/graphiql',
   graphiqlExpress({
     endpointURL: graphqlEndpoint,
-    subscriptionsEndpoint: 'ws://localhost:3000/subscriptions'
+    subscriptionsEndpoint: 'ws://localhost:8081/subscriptions'
   })
 );
 
@@ -124,9 +129,7 @@ app.use('/files', express.static('files'));
 
 const server = createServer(app);
 
-const clear = process.env.TEST_DB ? true : false;
-
-models.sequelize.sync({ force: clear }).then(() => {
+models.sequelize.sync({}).then(() => {
   server.listen(3000, () => {
     // eslint-disable-next-line no-new
     new SubscriptionServer(

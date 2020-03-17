@@ -147,7 +147,7 @@ app.use('/files', _express2.default.static('files'));
 const server = (0, _http.createServer)(app);
 
 _models2.default.sequelize.sync({}).then(() => {
-  server.listen(3000, () => {
+  server.listen(8081, () => {
     // eslint-disable-next-line no-new
     new _subscriptionsTransportWs.SubscriptionServer({
       execute: _graphql.execute,

@@ -16,7 +16,7 @@ import Sequelize from 'sequelize';
 const sequelize = new Sequelize(
   process.env.TEST_DB || 'slack',
   'postgres',
-  '123',
+  'postgres',
   {
     dialect: 'postgres',
     operatorsAliases: Sequelize.Op,

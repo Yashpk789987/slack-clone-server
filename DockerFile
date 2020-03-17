@@ -1,6 +1,7 @@
-FROM node:10-alpine
+FROM node:10
 WORKDIR /app
 COPY package.json .
 RUN npm install
 COPY dist .
+COPY wait-for-it.sh .
 CMD node app.js

@@ -4,10 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _keys = require('babel-runtime/core-js/object/keys');
-
-var _keys2 = _interopRequireDefault(_keys);
-
 var _sequelize = require('sequelize');
 
 var _sequelize2 = _interopRequireDefault(_sequelize);
@@ -27,7 +23,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //   }
 // );
 
-var sequelize = new _sequelize2.default(process.env.TEST_DB || 'slack', 'postgres', '123', {
+const sequelize = new _sequelize2.default(process.env.TEST_DB || 'slack', 'postgres', '123', {
   dialect: 'postgres',
   operatorsAliases: _sequelize2.default.Op,
   define: {
@@ -35,7 +31,7 @@ var sequelize = new _sequelize2.default(process.env.TEST_DB || 'slack', 'postgre
   }
 });
 
-var models = {
+const models = {
   User: sequelize.import('./user'),
   Channel: sequelize.import('./channel'),
   Message: sequelize.import('./message'),
@@ -45,7 +41,7 @@ var models = {
   PCMember: sequelize.import('./PCMember')
 };
 
-(0, _keys2.default)(models).forEach(function (modelName) {
+Object.keys(models).forEach(modelName => {
   if ('associate' in models[modelName]) {
     models[modelName].associate(models);
   }

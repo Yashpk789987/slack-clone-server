@@ -26,6 +26,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const sequelize = new _sequelize2.default(process.env.TEST_DB || 'slack', 'postgres', '123', {
   dialect: 'postgres',
   operatorsAliases: _sequelize2.default.Op,
+  host: process.env.DB_HOST || 'localhost',
   define: {
     underscored: true
   }
@@ -38,7 +39,7 @@ const models = {
   Team: sequelize.import('./team'),
   Member: sequelize.import('./member'),
   DirectMessage: sequelize.import('./directMessage'),
-  PCMember: sequelize.import('./PCMember')
+  PCMember: sequelize.import('./pcmember')
 };
 
 Object.keys(models).forEach(modelName => {

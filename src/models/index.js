@@ -20,6 +20,7 @@ const sequelize = new Sequelize(
   {
     dialect: 'postgres',
     operatorsAliases: Sequelize.Op,
+    host: process.env.DB_HOST || 'localhost',
     define: {
       underscored: true
     }
@@ -33,7 +34,7 @@ const models = {
   Team: sequelize.import('./team'),
   Member: sequelize.import('./member'),
   DirectMessage: sequelize.import('./directMessage'),
-  PCMember: sequelize.import('./PCMember')
+  PCMember: sequelize.import('./pcmember')
 };
 
 Object.keys(models).forEach(modelName => {

@@ -1,6 +1,6 @@
 import Sequelize from 'sequelize';
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default async () => {
   let maxReconnects = 20;
@@ -8,14 +8,14 @@ export default async () => {
   const sequelize = new Sequelize(
     process.env.TEST_DB || 'slack',
     'postgres',
-    'postgres',
+    '123',
     {
       dialect: 'postgres',
       operatorsAliases: Sequelize.Op,
       host: process.env.DB_HOST || 'localhost',
       define: {
-        underscored: true
-      }
+        underscored: true,
+      },
     }
   );
 
@@ -43,10 +43,10 @@ export default async () => {
     Team: sequelize.import('./team'),
     Member: sequelize.import('./member'),
     DirectMessage: sequelize.import('./directMessage'),
-    PCMember: sequelize.import('./pcmember')
+    PCMember: sequelize.import('./pcmember'),
   };
 
-  Object.keys(models).forEach(modelName => {
+  Object.keys(models).forEach((modelName) => {
     if ('associate' in models[modelName]) {
       models[modelName].associate(models);
     }

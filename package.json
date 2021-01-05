@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "devDependencies": {
-    "axios": "0.17.1",
+    "axios": "0.21.1",
     "babel-cli": "^6.26.0",
     "babel-jest": "21.2.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
